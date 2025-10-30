@@ -1,12 +1,14 @@
 import { useRouter } from 'expo-router';
 import * as React from 'react';
 import { Button, Image, StyleSheet, Text, View } from "react-native";
+import GoalProgress from '../Component/progressbar';
 
 const HomeScreen = () => {
     const [isShowingImage, setShowingImage] = React.useState(false);
     const router = useRouter();
     return (
         <View style={styles.container}>
+            <GoalProgress/>
             {
                 isShowingImage ?
                     (
