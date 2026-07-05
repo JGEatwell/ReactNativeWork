@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Button, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 
 
@@ -11,7 +11,15 @@ const Habits = [
 
 const HomeScreen = () => {
     const router = useRouter();
+    const params = useLocalSearchParams();
     const [habits, setHabits] = useState(Habits);
+
+    useEffect(() => {
+        if(params.newHabitName) {
+            setHabits(prev => [...prev, {id: Date.now(), name: params.newHabitName, streak: 0, completedToday: false}]);
+            router.setParams({ newHabitName: undefined }); // Clear the parameter after adding the habit
+        }
+    }, [params.newHabitName]);
 
     const markHabitCompleted = (id) => {
         setHabits(prev => prev.map(habit => 
@@ -33,8 +41,11 @@ const HomeScreen = () => {
                         <Text style={styles.streak}>Streak: {item.streak}</Text>
                         {item.completedToday && <Text style={styles.doneLabel}>Completed Today!</Text>}
                     </Pressable>
-    )}
+                )}
             />
+                <Pressable style={styles.fab} onPress={() => router.push({ pathname: '/addHabit' })}>
+                    <Text style={styles.fabText}>+</Text>
+                </Pressable>
             <View style={styles.buttonContainer}>
                 <Button
                     title='Profile'
@@ -82,6 +93,23 @@ const styles = StyleSheet.create({
         marginBottom: 40,
         alignSelf: 'stretch',
     },
+    fab: {
+    position: 'absolute',
+    right: 24,
+    bottom: 100,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#841584',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+},
+fabText: {
+    color: 'white',
+    fontSize: 28,
+    lineHeight: 28,
+},
 });
 
 export default HomeScreen;
