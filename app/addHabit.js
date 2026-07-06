@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { colours } from '../constants/colours';
 
 const AddHabitScreen = () => {
     const [name, setName] = useState('');
@@ -9,6 +10,8 @@ const AddHabitScreen = () => {
     const handleAddHabit = () => {
         if(!name.trim())
             return;
+        // navigate (not push) so this returns to the existing "/" screen instead
+        // of stacking a second copy; params is how we hand the new name back to it
         router.navigate({ pathname: '/', params: { newHabitName: name.trim() } });
     };
 
@@ -40,7 +43,7 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: colours.border,
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
