@@ -1,19 +1,23 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Button, StyleSheet, Text, TextInput, View } from "react-native";
 import { colours } from '../constants/colours';
+import { STORAGE_KEY } from '../constants/storage';
 
 const AddHabitScreen = () => {
     const [name, setName] = useState('');
     const router = useRouter();
 
-    const handleAddHabit = () => {
+    const handleAddHabit = async () => {
         if(!name.trim())
             return;
-        // navigate (not push) so this returns to the existing "/" screen instead
-        // of stacking a second copy; params is how we hand the new name back to it
-        router.navigate({ pathname: '/', params: { newHabitName: name.trim() } });
-    };
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        const habits = stored ? JSON.parse(stored) : [];
+        const updated = [...habits, {id: Date.now(), name: name.trim(), streak: 0, lastCompletedDate: null}];
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        router.back();
+    }
 
     return (
         <View style={styles.container}>

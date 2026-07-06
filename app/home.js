@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colours } from '../constants/colours';
-
+import { STORAGE_KEY } from '../constants/storage';
 // Fallback seed data, only used if AsyncStorage is empty (i.e. first launch).
 const Habits = [
     {id: 1, name: 'Drink Water', streak: 0, lastCompletedDate: null},
@@ -12,7 +14,6 @@ const Habits = [
     {id: 3, name: 'Stretch', streak: 0, lastCompletedDate: null},
 ]
 
-const STORAGE_KEY = 'habits';
 const today = () => new Date().toDateString();
 
 // Note: because this file also sits directly in app/, expo-router registers it
@@ -20,30 +21,24 @@ const today = () => new Date().toDateString();
 // instance actually used/rendered here. Nothing should navigate to "/home".
 const HomeScreen = () => {
     const router = useRouter();
-    const params = useLocalSearchParams();
     const [habits, setHabits] = useState([]);
     const [isLoaded, setIsLoaded] = useState(false);
-
-    useEffect(() => {
-        const loadHabits = async () => {
-            const stored = await AsyncStorage.getItem(STORAGE_KEY);
-            setHabits(stored ? JSON.parse(stored) : Habits);
-            setIsLoaded(true);
-        }
-        loadHabits();
-    }, []);
+    
+    useFocusEffect(
+        useCallback(() => {
+            const loadHabits = async () => {
+                const stored = await AsyncStorage.getItem(STORAGE_KEY);
+                setHabits(stored ? JSON.parse(stored) : Habits);
+                setIsLoaded(true);
+            }
+            loadHabits();
+        }, [])
+    );
 
     useEffect(() => {
         if(!isLoaded) return;
         AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
     }, [habits, isLoaded]);
-
-    useEffect(() => {
-        if(params.newHabitName) {
-            setHabits(prev => [...prev, {id: Date.now(), name: params.newHabitName, streak: 0, lastCompletedDate: null}]);
-            router.setParams({ newHabitName: undefined })
-        }
-    }, [params.newHabitName]);
 
     // Immutable update: map returns a new array, and only the tapped habit
     // becomes a new object - required so React detects the change and re-renders.
@@ -54,13 +49,22 @@ const HomeScreen = () => {
         ));
     }
 
+    const deleteHabit = (id) => {
+        setHabits(prev => prev.filter(habit => habit.id !== id));
+    }
+
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
             <FlatList
                 data={habits}
                 keyExtractor={(item) => item.id.toString()}
                 contentContainerStyle={styles.list}
                 renderItem={({ item }) => (
+                    <Swipeable renderRightActions={() => (
+                        <Pressable style={styles.deleteAction} onPress={() => deleteHabit(item.id)}>
+                            <Ionicons name="trash" size={24} color={colours.surface} />
+                        </Pressable>
+                    )}>
                     <Pressable style={({ pressed }) => [styles.card,
                         item.lastCompletedDate === today() && styles.cardDone, pressed && styles.cardPressed,]}
                         onPress={() => markHabitCompleted(item.id)}>
@@ -72,14 +76,15 @@ const HomeScreen = () => {
                             <Text style={styles.streakText}>Streak: {item.streak}</Text>
                         </View>
                     </Pressable>
-                )}
+                </Swipeable>
+            )}
             />
                 {/* Floating "+" button - opens the add-habit modal screen */}
                <Pressable style={({ pressed }) => [styles.fab, 
                     pressed && styles.fabPressed]} onPress={() => router.push('/addHabit')}>
                    <Ionicons name="add" size={28} color={colours.surface} />
                </Pressable>
-        </View>
+        </SafeAreaView>
     );  
 
 }
@@ -91,22 +96,33 @@ const styles = StyleSheet.create({
     },
     list: {
         padding: 16,
-        gap: 12,
+        gap: 14,
     },
     card: {
         backgroundColor: colours.surface,
-        padding: 16,
-        borderRadius: 12,
-        elevation: 2,
+        padding: 18,
+        borderRadius: 16,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 3,
+        elevation: 2,
     },
     cardDone: {
         backgroundColor: colours.successBackground,
     },
     cardPressed: {
         opacity: 0.70,
+    },
+    deleteAction: {
+    backgroundColor: colours.danger,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    borderRadius: 16,
     },
     cardInfo: {
         flexShrink: 1,
