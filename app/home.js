@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colours } from '../constants/colours';
 import { STORAGE_KEY } from '../constants/storage';
+import { useTheme } from '../context/themeContext';
 // Fallback seed data, only used if AsyncStorage is empty (i.e. first launch).
 const Habits = [
     {id: 1, name: 'Drink Water', streak: 0, lastCompletedDate: null},
@@ -23,6 +23,7 @@ const HomeScreen = () => {
     const router = useRouter();
     const [habits, setHabits] = useState([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const { colours } = useTheme();
     
     useFocusEffect(
         useCallback(() => {
@@ -52,6 +53,85 @@ const HomeScreen = () => {
     const deleteHabit = (id) => {
         setHabits(prev => prev.filter(habit => habit.id !== id));
     }
+
+    const styles = useMemo(() => StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: colours.background,
+    },
+    list: {
+        padding: 16,
+        gap: 14,
+    },
+    card: {
+        backgroundColor: colours.surface,
+        padding: 18,
+        borderRadius: 16,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        // shadowOpacity: 0.08,
+        // shadowRadius: 3,
+        // elevation: 2,
+    },
+    cardDone: {
+        backgroundColor: colours.successBackground,
+    },
+    cardPressed: {
+        opacity: 0.70,
+    },
+    deleteAction: {
+    backgroundColor: colours.danger,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    borderRadius: 16,
+    },
+    cardInfo: {
+        flexShrink: 1,
+        marginRight: 12,
+    },
+    cardStreak: {
+        backgroundColor: colours.primary,
+        borderRadius: 16,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        minWidth: 40,
+        alignItems: 'center',
+    },
+    streakText: {
+        color: colours.surface,
+        fontWeight: '600',
+        fontSize: 16,
+    },
+    name: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colours.text,
+    },
+    doneLabel: {
+        marginTop: 4,
+        color: colours.success,
+        fontWeight: '600',
+    },
+    fab: {
+        position: 'absolute',
+        right: 24,
+        bottom: 100,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: colours.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4,
+    },
+    fabPressed: {
+        opacity: 0.70,
+    }
+}), [colours]);
 
     return (
         <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -89,82 +169,6 @@ const HomeScreen = () => {
 
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colours.background,
-    },
-    list: {
-        padding: 16,
-        gap: 14,
-    },
-    card: {
-        backgroundColor: colours.surface,
-        padding: 18,
-        borderRadius: 16,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 3,
-        elevation: 2,
-    },
-    cardDone: {
-        backgroundColor: colours.successBackground,
-    },
-    cardPressed: {
-        opacity: 0.70,
-    },
-    deleteAction: {
-    backgroundColor: colours.danger,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 80,
-    borderRadius: 16,
-    },
-    cardInfo: {
-        flexShrink: 1,
-        marginRight: 12,
-    },
-    cardStreak: {
-        backgroundColor: colours.primary,
-        borderRadius: 16,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        minWidth: 40,
-        alignItems: 'center',
-    },
-    streakText: {
-        color: colours.surface,
-        fontWeight: '600',
-        fontSize: 16,
-    },
-    name: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    doneLabel: {
-        marginTop: 4,
-        color: colours.success,
-        fontWeight: '600',
-    },
-    fab: {
-        position: 'absolute',
-        right: 24,
-        bottom: 100,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: colours.primary,
-        justifyContent: 'center',
-        alignItems: 'center',
-        elevation: 4,
-    },
-    fabPressed: {
-        opacity: 0.70,
-    }
-});
+
 
 export default HomeScreen;
