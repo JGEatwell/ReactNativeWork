@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { Pressable } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider, useTheme } from '../context/themeContext';
@@ -9,6 +10,8 @@ function Navigation() {
     const { colours, isDark, toggleTheme } = useTheme();
 
     return (
+      <>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <Stack>
             <Stack.Screen
                 name="index"
@@ -45,6 +48,7 @@ function Navigation() {
                 }}
             />
         </Stack>
+      </>
     );
 }
 

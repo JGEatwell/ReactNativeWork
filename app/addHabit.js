@@ -15,7 +15,7 @@ const AddHabitScreen = () => {
             return;
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         const habits = stored ? JSON.parse(stored) : [];
-        const updated = [...habits, {id: Date.now(), name: name.trim(), streak: 0, lastCompletedDate: null}];
+        const updated = [...habits, {id: Date.now(), name: name.trim(), streak: 0, completedDates: []}];
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
         router.back();
     }
