@@ -2,12 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HabitCard from '../Component/habitCard';
 import { STORAGE_KEY } from '../constants/storage';
 import { useTheme } from '../context/themeContext';
+import { habitsReducer } from '../reducers/habitReducers';
 import { today } from '../utils/date';
 
 // Fallback seed data, only used if AsyncStorage is empty (i.e. first launch).
@@ -22,7 +23,7 @@ const Habits = [
 // instance actually used/rendered here. Nothing should navigate to "/home".
 const HomeScreen = () => {
     const router = useRouter();
-    const [habits, setHabits] = useState([]);
+    const [habits, dispatch] = useReducer(habitsReducer, []);
     const [isLoaded, setIsLoaded] = useState(false);
     const { colours } = useTheme();
 
@@ -30,7 +31,7 @@ const HomeScreen = () => {
         useCallback(() => {
             const loadHabits = async () => {
                 const stored = await AsyncStorage.getItem(STORAGE_KEY);
-                setHabits(stored ? JSON.parse(stored) : Habits);
+                dispatch({ type: 'ADD_HABIT', payload: stored ? JSON.parse(stored) : Habits });
                 setIsLoaded(true);
             }
             loadHabits();
@@ -51,16 +52,12 @@ const HomeScreen = () => {
         if (habit && !alreadyDoneToday) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        setHabits(prev => prev.map(h =>
-            h.id === id && !(h.completedDates || []).includes(today())
-                ? { ...h, completedDates: [...(h.completedDates || []), today()], streak: h.streak + 1 }
-                : h
-        ));
+        dispatch({ type: 'COMPLETE_HABIT', id });
     }
 
 
 const deleteHabit = (id) => {
-    setHabits(prev => prev.filter(habit => habit.id !== id));
+    dispatch({ type: 'DELETE_HABIT', id });
 }
 
 const styles = useMemo(() => StyleSheet.create({
