@@ -21,3 +21,5 @@ export const darkColours = {
     textMuted: '#aaaaaa',
     border: '#3a3a3a',
 };
+
+export type Colours = typeof lightColours;
