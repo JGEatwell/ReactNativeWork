@@ -1,6 +1,12 @@
+import { Habit } from '../types/habits';
 import { today } from '../utils/date';
 
-export function habitsReducer(state, action) {
+export type HabitAction =
+    | { type: 'ADD_HABIT'; payload: Habit[] }
+    | { type: 'COMPLETE_HABIT'; id: number }
+    | { type: 'DELETE_HABIT'; id: number };
+
+export function habitsReducer(state: Habit[], action: HabitAction): Habit[] {
     switch (action.type) {
         case 'ADD_HABIT':
             return action.payload;

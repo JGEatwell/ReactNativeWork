@@ -9,7 +9,7 @@ Notifications.setNotificationHandler({
     }),
 });
 
-export const scheduleReminder = async () => {
+export const scheduleReminder = async (): Promise<boolean> => {
     const { status } = await Notifications.requestPermissionsAsync();
     if (status !== 'granted') {
         return false;
@@ -24,12 +24,11 @@ export const scheduleReminder = async () => {
             type: Notifications.SchedulableTriggerInputTypes.DAILY,
             hour: 9,
             minute: 0,
-            repeats: true,
         },
     });
     return true;
 };
 
-export const cancelReminder = async () => {
+export const cancelReminder = async (): Promise<void> => {
     await Notifications.cancelAllScheduledNotificationsAsync();
 };
