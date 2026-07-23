@@ -1,12 +1,22 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, useContext, useEffect, useState } from 'react';
-import { darkColours, lightColours } from '../constants/colours';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { Colours, darkColours, lightColours } from '../constants/colours';
 
 const THEME_STORAGE_KEY = 'appThemePreference';
 
-const ThemeContext = createContext();
+type ThemeContextValue = {
+    colours: Colours;
+    isDark: boolean;
+    toggleTheme: () => void;
+};
 
-export const ThemeProvider = ({ children }) => {
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+
+type ThemeProviderProps = {
+    children: ReactNode;
+};
+
+export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     const [isDark, setIsDark] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -31,11 +41,16 @@ export const ThemeProvider = ({ children }) => {
         return null;
     }
     return (
-        <ThemeContext.Provider value={{ colours: isDark ? darkColours : lightColours, isDark,
-            toggleTheme }}>
+        <ThemeContext.Provider value={{ colours: isDark ? darkColours : lightColours, isDark, toggleTheme }}>
             {children}
         </ThemeContext.Provider>
     );
 };
 
-export const useTheme = () => useContext(ThemeContext);
+export const useTheme = (): ThemeContextValue => {
+    const context = useContext(ThemeContext);
+    if (!context) {
+        throw new Error('useTheme must be used within a ThemeProvider');
+    }
+    return context;
+};
