@@ -3,9 +3,16 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useTheme } from '../context/themeContext';
+import { Habit } from '../types/habits';
 import { getLastNDays, today } from '../utils/date';
 
-const HabitCard = ({ habit, onComplete, onDelete }) => {
+type HabitCardProps = {
+    habit: Habit;
+    onComplete: (id: number) => void;
+    onDelete: (id: number) => void;
+};
+
+const HabitCard = ({ habit, onComplete, onDelete }: HabitCardProps) => {
     const { colours } = useTheme();
     const completedDates = habit.completedDates || [];
     const isDoneToday = completedDates.includes(today());
