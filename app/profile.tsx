@@ -21,7 +21,7 @@ const ProfileScreen = () => {
         loadReminderSetting();
     }, []);
 
-    const handleToggleReminder = async (value) => {
+    const handleToggleReminder = async (value: boolean) => {
         if (value) {
             const success = await scheduleReminder();
             if (!success) return;
@@ -31,37 +31,31 @@ const ProfileScreen = () => {
         setReminderEnabled(value);
         await AsyncStorage.setItem(REMINDER_STORAGE_KEY, value ? 'true' : 'false');
     };
-    
 
     const styles = React.useMemo(() => StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: colours.background,
-    },
-    text: {
-        color: colours.text,
-    },
-    buttonContainer: {
-        margin: 20,
-        marginBottom: 40,
-        alignSelf: 'stretch'
-    },
-    alternativeLayoutButtonContainer: {
-        margin: 20,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    reminderRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: 24,
-        paddingHorizontal: 24,
-        alignSelf: 'stretch',
-    },
-}), [colours]);
+        container: {
+            flex: 1,
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            backgroundColor: colours.background,
+        },
+        text: {
+            color: colours.text,
+        },
+        buttonContainer: {
+            margin: 20,
+            marginBottom: 40,
+            alignSelf: 'stretch'
+        },
+        reminderRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: 24,
+            paddingHorizontal: 24,
+            alignSelf: 'stretch',
+        },
+    }), [colours]);
 
     return (
         <View style={styles.container}>
@@ -89,7 +83,7 @@ const ProfileScreen = () => {
                 <Button
                     title="Press me"
                     onPress={() =>
-                        route.push({ 
+                        route.push({
                             pathname: './home',
                         })
                     }
@@ -99,8 +93,5 @@ const ProfileScreen = () => {
         </View>
     );
 }
-
-
-
 
 export default ProfileScreen;
