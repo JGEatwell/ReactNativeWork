@@ -4,7 +4,8 @@ import { today } from '../utils/date';
 export type HabitAction =
     | { type: 'ADD_HABIT'; payload: Habit[] }
     | { type: 'COMPLETE_HABIT'; id: number }
-    | { type: 'DELETE_HABIT'; id: number };
+    | { type: 'DELETE_HABIT'; id: number }
+    | { type: 'RESTORE_HABIT'; habit: Habit; index: number };
 
 export function habitsReducer(state: Habit[], action: HabitAction): Habit[] {
     switch (action.type) {
@@ -18,6 +19,11 @@ export function habitsReducer(state: Habit[], action: HabitAction): Habit[] {
             );
         case 'DELETE_HABIT':
             return state.filter(habit => habit.id !== action.id);
+        case 'RESTORE_HABIT': {
+            const next = [...state];
+            next.splice(action.index, 0, action.habit);
+            return next;
+        }
         default:
             return state;
     }

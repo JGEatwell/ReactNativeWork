@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { FlatList, Pressable, StyleSheet } from "react-native";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HabitCard from '../Component/habitCard';
 import { STORAGE_KEY } from '../constants/storage';
@@ -26,6 +26,8 @@ const HomeScreen = () => {
     const router = useRouter();
     const [habits, dispatch] = useReducer(habitsReducer, []);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [lastDeleted, setLastDeleted] = useState<{ habit: Habit; index: number } | null>(null);
+    const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const { colours } = useTheme();
 
     useFocusEffect(
@@ -45,6 +47,12 @@ const HomeScreen = () => {
         AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
     }, [habits, isLoaded]);
 
+    useEffect(() => {
+        return () => {
+            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+        };
+    }, []);
+
     // Immutable update: map returns a new array, and only the tapped habit
     // becomes a new object - required so React detects the change and re-renders.
     // completedDates guards against incrementing streak more than once per day.
@@ -58,7 +66,24 @@ const HomeScreen = () => {
     }
 
     const deleteHabit = (id: number) => {
+        const index = habits.findIndex(h => h.id === id);
+        const habit = habits[index];
+        if (!habit) return;
+
         dispatch({ type: 'DELETE_HABIT', id });
+        setLastDeleted({ habit, index });
+
+        if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+        undoTimeoutRef.current = setTimeout(() => {
+            setLastDeleted(null);
+        }, 4000);
+    }
+
+    const handleUndoDelete = () => {
+        if (!lastDeleted) return;
+        if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+        dispatch({ type: 'RESTORE_HABIT', habit: lastDeleted.habit, index: lastDeleted.index });
+        setLastDeleted(null);
     }
 
     const styles = useMemo(() => StyleSheet.create({
@@ -85,6 +110,46 @@ const HomeScreen = () => {
         fabPressed: {
             opacity: 0.70,
         },
+        emptyContentContainer: {
+            flexGrow: 1,
+            justifyContent: 'center',
+        },
+        emptyState: {
+            alignItems: 'center',
+        },
+        emptyTitle: {
+            fontSize: 18,
+            fontWeight: '600',
+            color: colours.text,
+        },
+        emptySubtitle: {
+            marginTop: 4,
+            fontSize: 14,
+            color: colours.textMuted,
+        },
+        undoToast: {
+            position: 'absolute',
+            left: 24,
+            right: 24,
+            bottom: 24,
+            backgroundColor: colours.text,
+            borderRadius: 12,
+            paddingVertical: 12,
+            paddingHorizontal: 16,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+        },
+        undoText: {
+            color: colours.surface,
+            flexShrink: 1,
+            marginRight: 12,
+        },
+        undoButton: {
+            color: colours.primary,
+            fontWeight: '700',
+        },
+
     }), [colours]);
 
     return (
@@ -92,7 +157,13 @@ const HomeScreen = () => {
             <FlatList
                 data={habits}
                 keyExtractor={(item) => item.id.toString()}
-                contentContainerStyle={styles.list}
+                contentContainerStyle={[styles.list, habits.length === 0 && styles.emptyContentContainer]}
+                ListEmptyComponent={
+                    <View style={styles.emptyState}>
+                        <Text style={styles.emptyTitle}>Currently No Habits</Text>
+                        <Text style={styles.emptySubtitle}>Add a habit by clicking the "+" button below</Text>
+                    </View>
+                }
                 renderItem={({ item }) => (
                     <HabitCard habit={item} onComplete={markHabitCompleted} onDelete={deleteHabit} />
                 )}
@@ -102,6 +173,14 @@ const HomeScreen = () => {
                 pressed && styles.fabPressed]} onPress={() => router.push('/addHabit')}>
                 <Ionicons name="add" size={28} color={colours.surface} />
             </Pressable>
+            {lastDeleted && (
+                <View style={styles.undoToast}>
+                    <Text style={styles.undoText}>"{lastDeleted.habit.name}" deleted</Text>
+                    <Pressable onPress={handleUndoDelete}>
+                        <Text style={styles.undoButton}>UNDO</Text>
+                    </Pressable>
+                </View>
+            )}
         </SafeAreaView>
     );
 }

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -14,9 +15,14 @@ type HabitCardProps = {
 
 const HabitCard = ({ habit, onComplete, onDelete }: HabitCardProps) => {
     const { colours } = useTheme();
+    const router = useRouter();
     const completedDates = habit.completedDates || [];
     const isDoneToday = completedDates.includes(today());
     const last7Days = getLastNDays(7);
+
+    const handleLongPress = () => {
+        router.push({ pathname: '/addHabit', params: { habitId: habit.id.toString(), habitName: habit.name } });
+    };
 
     const styles = useMemo(() => StyleSheet.create({
         card: {
@@ -108,7 +114,8 @@ const HabitCard = ({ habit, onComplete, onDelete }: HabitCardProps) => {
         )}>
             <Pressable style={({ pressed }) => [styles.card,
             isDoneToday && styles.cardDone, pressed && styles.cardPressed,]}
-                onPress={() => onComplete(habit.id)}>
+                onPress={() => onComplete(habit.id)}
+                onLongPress={handleLongPress}>
                 <View style={styles.cardTopRow}>
                     <View style={styles.cardInfo}>
                         <Text style={styles.name}>{habit.name}</Text>

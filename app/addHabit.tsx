@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Button, StyleSheet, Text, TextInput, View } from "react-native";
 import { STORAGE_KEY } from '../constants/storage';
@@ -7,16 +7,22 @@ import { useTheme } from '../context/themeContext';
 import { Habit } from '../types/habits';
 
 const AddHabitScreen = () => {
-    const [name, setName] = useState('');
+    const { habitId, habitName } = useLocalSearchParams<{ habitId?: string; habitName?: string }>();
+    const isEditing = !!habitId;
+    const [name, setName] = useState(habitName ?? '');
     const router = useRouter();
     const { colours } = useTheme();
 
-    const handleAddHabit = async () => {
+    const handleSubmit = async () => {
         if(!name.trim())
             return;
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         const habits: Habit[] = stored ? JSON.parse(stored) : [];
-        const updated: Habit[] = [...habits, {id: Date.now(), name: name.trim(), streak: 0, completedDates: []}];
+
+        const updated: Habit[] = isEditing
+            ? habits.map(h => h.id === Number(habitId) ? { ...h, name: name.trim() } : h)
+            : [...habits, {id: Date.now(), name: name.trim(), streak: 0, completedDates: []}];
+
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
         router.back();
     }
@@ -46,6 +52,7 @@ const AddHabitScreen = () => {
 
     return (
         <View style={styles.container}>
+            <Stack.Screen options={{ title: isEditing ? 'Edit Habit' : 'Add Habit' }} />
             <Text style={styles.label}>Habit Name:</Text>
             <TextInput
                 style={styles.input}
@@ -55,7 +62,7 @@ const AddHabitScreen = () => {
                 placeholderTextColor={colours.textMuted}
                 autoFocus
             />
-            <Button title="Add Habit" onPress={handleAddHabit} />
+            <Button title={isEditing ? 'Save Changes' : 'Add Habit'} onPress={handleSubmit} />
         </View>
     );
 };
